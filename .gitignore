@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+credentials/
+undo_log.json
+.DS_Store
