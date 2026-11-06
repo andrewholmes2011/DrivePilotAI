@@ -106,7 +106,7 @@ function draw(){
 }
 async function scanDrive(){
  if(!token)return;busy=true;updateStats();setStatus("Finding Unsorted folder…");$("progressBar").style.width="15%";
- try{const root=await findUnsorted();unsortedId=root.id;const out=[];await walk(root,"Unsorted",out);driveItems=out;selected=new Set(out.map(f=>f.id));$("sourceLabel").textContent="Google Drive · Unsorted · "+out.length+" files";$("driveStatus").textContent="Connected · "+out.length+" files scanned inside Unsorted.";setStatus("Scan complete. Nothing has moved.");$("progressBar").style.width="100%";draw();$("previewBtn").disabled=!out.length;$("scanBtn").disabled=false}
+ try{const root=await findUnsorted();unsortedId=root.id;const out=[];await walk(root,"Unsorted",out);driveItems=out;selected=new Set();$("sourceLabel").textContent="Google Drive · Unsorted · "+out.length+" files";$("driveStatus").textContent="Connected · "+out.length+" files scanned inside Unsorted.";setStatus("Scan complete. Nothing has moved.");$("progressBar").style.width="100%";draw();$("previewBtn").disabled=!out.length;$("scanBtn").disabled=false}
  catch(e){setStatus(e.message);$("driveStatus").textContent=e.message;alert(e.message)}
  finally{busy=false;updateStats()}
 }
