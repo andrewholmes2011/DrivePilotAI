@@ -1,22 +1,24 @@
 # DrivePilot AI Cloudflare backend
 
-This backend provides per-Google-account organization history and an optional Cloudflare Workers AI classification endpoint.
+Optional Cloudflare Worker service for shared organization history and opt-in Workers AI classification.
 
-## Deploy
+## Setup
 
-1. Install Wrangler on a computer where Node.js is available.
-2. From this directory run: npx wrangler d1 create drivepilot-ai.
-3. Copy the returned database ID into wrangler.toml.
-4. Run: npx wrangler d1 execute drivepilot-ai --remote --file=schema.sql.
-5. Run: npx wrangler deploy.
-6. Set the deployed Worker URL in the DrivePilot AI web app.
+1. Run `npx wrangler d1 create drivepilot-ai` from this directory.
+2. Copy the returned database ID into `wrangler.toml`.
+3. Run `npx wrangler d1 execute drivepilot-ai --remote --file=schema.sql`.
+4. Configure Worker variables:
+   - `GOOGLE_CLIENT_ID`: the same OAuth Web client ID used by the browser.
+   - `ALLOWED_ORIGINS`: exact site origin(s), comma-separated, such as `https://andrewholmes2011.github.io`.
+5. Run `npx wrangler deploy`.
 
-The Worker validates Google access tokens with Google's tokeninfo endpoint and keys history by verified Google email. It never stores Google access tokens.
+The Worker checks Google access tokens with Google's tokeninfo endpoint, validates the OAuth audience when `GOOGLE_CLIENT_ID` is configured, and partitions history by verified Google email. It does not persist access tokens.
 
-## Important
+## Notes
 
-- The browser must request OAuth scopes that permit account identity and Drive operations. Workspace administrators can block the OAuth app or Drive API.
-- The AI endpoint sends document text to Cloudflare Workers AI. Do not enable it for school or sensitive documents unless account owner and school policy permit that processing.
-- CORS is permissive for initial development. Before public deployment, replace the wildcard origin with the exact GitHub Pages origin.
-- Review Cloudflare usage limits and model pricing/availability before enabling AI.
-- This backend scaffold does not grant access to a school account or bypass administrator restrictions.
+- The browser requires the Google Drive `drive` scope to move files. Google verification or Workspace administrator approval may be required.
+- Never put a Google client secret in browser code or this repository.
+- The history endpoint stores file metadata and action details, not file contents.
+- The AI endpoint sends submitted text to Cloudflare Workers AI. The current browser interface does not call it automatically.
+- CORS allows only origins configured in `ALLOWED_ORIGINS`.
+- This service does not bypass school account restrictions.
