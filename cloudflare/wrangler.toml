@@ -1,0 +1,11 @@
+name = "drivepilot-ai-api"
+main = "worker.js"
+compatibility_date = "2026-11-06"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "drivepilot-ai"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[ai]
+binding = "AI"
