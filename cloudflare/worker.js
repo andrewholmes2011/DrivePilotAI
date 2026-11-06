@@ -19,7 +19,7 @@ async function identifyGoogleUser(request, env) {
   if (!response.ok) return null;
   const info = await response.json();
   if (!info.email || info.email_verified !== "true") return null;
-  if (env.GOOGLE_CLIENT_ID && info.aud !== env.GOOGLE_CLIENT_ID) return null;
+  if (!env.GOOGLE_CLIENT_ID || info.aud !== env.GOOGLE_CLIENT_ID) return null;
   return info.email.toLowerCase();
 }
 export default {
