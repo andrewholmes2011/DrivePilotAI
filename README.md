@@ -1,76 +1,71 @@
-# DrivePilotAI
+# DrivePilot AI
 
-**A free browser-based file organizer. No Python installation, desktop installer, or paid AI API required.**
+A cross-platform Google Drive organizer for Windows 11 and Chromebook.
 
-## Open the app
+Repository: https://github.com/andrewholmes2011/DrivePilotAI
 
-After GitHub Pages is enabled, open:
+## Target architecture
 
-https://andrewholmes2011.github.io/DrivePilotAI/
+- **Chromebook:** browser-only application using Google OAuth and the Google Drive API. No Linux, Python, or Chromebook installation is required.
+- **Windows 11:** browser interface plus a local companion for access to Google Drive for desktop at G:\My Drive.
+- **Hybrid AI:** deterministic rules first; optional local AI on Windows; optional Cloudflare Workers AI when explicitly enabled and permitted.
+- **Cloud history:** Cloudflare Worker + D1, partitioned by the verified Google account email.
+- **Safety:** scan and classify first; show a review queue; require explicit approval before moving; never delete files automatically.
 
-You can also run it from Visual Studio Code with the Live Server extension, or open `index.html` in a compatible browser. Folder access works best from the hosted HTTPS page or localhost in current Chrome or Edge.
+## Existing classification rules
 
-## Features
+1. Filename starts with 6. -> HHS 2025-2026 / 6th - Fenton APHG.
+2. Filename contains CFF -> CFF.
+3. Filename contains AVID -> Clausen 1st Hour.
+4. Images -> Photos.
+5. Google file types -> Sites, Docs, Sheets, Slides, Forms, Drawings, Maps.
+6. Remaining files -> content-based AI suggestion or AI Review.
 
-- Responsive dashboard for Windows, Chromebook, and modern browsers.
-- Scan a folder you explicitly choose using the browser File System Access API.
-- Categorize documents, spreadsheets, presentations, images, videos, audio, archives, code, and other files.
-- Search and filter scan results.
-- Preview proposed local moves before applying them.
-- Confirm before moving local files. Each file is copied and size-verified before the original is removed.
-- Undo recent moves during the current browser session.
-- Optional Google Drive metadata scan using Google's official OAuth flow and read-only Drive scope.
+All destination folders belong inside Drive Organizer. Numbered copies such as (1), (2) should be routed into an Extra subfolder.
 
-## Start using it
+## Current repository status
 
-1. Open the repository and download the ZIP, or clone it in Visual Studio Code.
-2. Open the project folder in VS Code.
-3. Open `index.html` with Live Server, or enable GitHub Pages for the repository.
-4. In Chrome or Edge, choose **Choose a folder** and select the folder you want to organize.
-5. Scan, review the categories, preview the moves, and only then choose **Apply approved local moves**.
+The root index.html is the earlier browser prototype. It supports local folder scanning and local moves with confirmation, plus metadata-only Google Drive scanning. **Its Google Drive connection is read-only; it does not yet move cloud Drive files or perform document-content AI classification.**
 
-No Python, Node.js, build process, or package installation is required.
+The cloud backend foundation is in cloudflare/:
+- worker.js: Google-token-validated history endpoints and optional Workers AI classification endpoint.
+- schema.sql: D1 history table.
+- wrangler.toml: deployment template.
+- README.md: backend deployment notes.
 
-## Enable GitHub Pages
+The Cloudflare backend is a scaffold and must be deployed/configured before cloud history or cloud AI can be used. The browser UI still needs to be connected to these endpoints.
 
-In the repository, open **Settings → Pages**. Under Build and deployment, choose **Deploy from a branch**, select `main` and `/ (root)`, then save. GitHub will publish the app at:
+## Chromebook constraints
 
-https://andrewholmes2011.github.io/DrivePilotAI/
+The Chromebook edition is browser-only. It does not depend on Linux, Python, Node.js, or a local executable. It requires:
+- A supported Chrome browser and HTTPS hosting.
+- A Google OAuth client ID.
+- Google Drive API access permitted by the Workspace administrator.
+- OAuth scopes approved by the account owner and administrator.
 
-## Optional Google Drive scan
+If the school blocks third-party OAuth or Drive API access, DrivePilot AI cannot bypass that restriction. Use an account and files for which you have authorization.
 
-Google Drive scanning is metadata-only and read-only. It does not move, rename, or delete Drive files.
+## Privacy and AI
 
-1. In Google Cloud Console, create or select a project if permitted.
-2. Enable the Google Drive API.
-3. Configure the OAuth consent screen.
-4. Create an OAuth Client ID with application type **Web application**.
-5. Add the exact hosted app origin to **Authorized JavaScript origins** (for example, `https://andrewholmes2011.github.io`). For local testing, add the localhost origin used by Live Server.
-6. Copy the client ID into the app's Google OAuth Client ID field and save it in that browser.
-7. Choose **Connect Google Drive** and complete Google's sign-in and consent flow.
+- Local rules and local file parsing should run on-device where possible.
+- Local Windows AI can be an optional Ollama integration; it is not available on a Chromebook without Linux.
+- Cloud AI sends the selected document text to Cloudflare Workers AI. Keep it disabled for school or sensitive documents unless permitted.
+- Never put provider API secrets in browser JavaScript or a public GitHub repository.
+- Do not send files to AI automatically. Require user opt-in and show what content will be transmitted.
 
-The app requests only `drive.metadata.readonly`. Do not put client secrets in this project. A browser OAuth client ID is not a client secret. Google Workspace administrators may block third-party OAuth clients or Drive API access. If access is blocked, ask your administrator; this app does not bypass school controls.
+## Deployment
 
-## Browser and safety limitations
+### GitHub Pages
 
-- Folder scanning and local moves require a browser that supports the File System Access API (current Chrome or Edge recommended) and a secure context such as HTTPS or localhost.
-- You must explicitly choose a folder and grant access. The app cannot silently scan your whole computer.
-- The browser may ask you to grant access again when reopening the app.
-- Undo history is held in memory for the current page session. Do not close or refresh the page before undoing.
-- Google Drive connection is read-only. Drive organization features are not enabled yet.
-- No automatic deletion, hidden background scanning, or AI upload of file contents.
-- Keep a backup of important files before organizing them.
+1. Open repository Settings -> Pages.
+2. Select Deploy from a branch.
+3. Select main and /(root).
+4. Save and wait for deployment.
 
-## Project structure
+### Cloudflare backend
 
-```
-DrivePilotAI/
-├── index.html
-├── README.md
-├── LICENSE
-└── .gitignore
-```
+Follow cloudflare/README.md. Replace the placeholder D1 database ID in wrangler.toml, apply schema.sql, deploy the Worker, and configure the exact app origin for CORS before public use.
 
-## License
+## Important
 
-MIT
+The project is under active development. Do not treat the current browser prototype as a completed Google Drive cloud organizer. Back up important files and review every proposed move before approving it.
