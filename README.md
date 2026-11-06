@@ -1,71 +1,56 @@
 # DrivePilot AI
 
-A cross-platform Google Drive organizer for Windows 11 and Chromebook.
+A browser-first Google Drive organizer for Windows 11 and Chromebooks.
 
 Repository: https://github.com/andrewholmes2011/DrivePilotAI
 
-## Target architecture
+## Implemented in this update
 
-- **Chromebook:** browser-only application using Google OAuth and the Google Drive API. No Linux, Python, or Chromebook installation is required.
-- **Windows 11:** browser interface plus a local companion for access to Google Drive for desktop at G:\My Drive.
-- **Hybrid AI:** deterministic rules first; optional local AI on Windows; optional Cloudflare Workers AI when explicitly enabled and permitted.
-- **Cloud history:** Cloudflare Worker + D1, partitioned by the verified Google account email.
-- **Safety:** scan and classify first; show a review queue; require explicit approval before moving; never delete files automatically.
+- Browser-only interface; no Chromebook Linux, Python, Node.js, or executable is required.
+- Google OAuth sign-in using a Web client ID.
+- Scans only files inside the Google Drive folder named "Unsorted", including nested folders.
+- Applies the requested filename and file-type classification rules.
+- Creates destination folders under "My Drive/Drive Organizer".
+- Displays a selectable review list and requires confirmation before moving files.
+- Moves files using Google Drive API parent-folder updates; supports undo during the current browser session.
+- Optional Cloudflare D1 history and AI backend scaffold.
 
-## Existing classification rules
+## Classification order
 
-1. Filename starts with 6. -> HHS 2025-2026 / 6th - Fenton APHG.
-2. Filename contains CFF -> CFF.
-3. Filename contains AVID -> Clausen 1st Hour.
-4. Images -> Photos.
-5. Google file types -> Sites, Docs, Sheets, Slides, Forms, Drawings, Maps.
-6. Remaining files -> content-based AI suggestion or AI Review.
+1. Filename begins with 6. → Drive Organizer/HHS 2025-2026/6th - Fenton APHG.
+2. Filename contains CFF → Drive Organizer/CFF.
+3. Filename contains AVID → Drive Organizer/Clausen 1st Hour.
+4. Numbered copies ending in (1), (2), etc. → an Extra subfolder inside the matched category.
+5. Images → Photos.
+6. Google Workspace types → Docs, Sheets, Slides, Forms, Drawings, Maps, or Sites.
+7. Common remaining file types → matching type folder; uncertain types → AI Review.
 
-All destination folders belong inside Drive Organizer. Numbered copies such as (1), (2) should be routed into an Extra subfolder.
+All destinations are under Drive Organizer. Only files inside Unsorted are eligible. The app does not delete files. A move updates Drive folder parents; it does not download and re-upload file contents.
 
-## Current repository status
+## Google OAuth setup
 
-The root index.html is the earlier browser prototype. It supports local folder scanning and local moves with confirmation, plus metadata-only Google Drive scanning. **Its Google Drive connection is read-only; it does not yet move cloud Drive files or perform document-content AI classification.**
+1. In Google Cloud Console, create/select a project and enable the Google Drive API.
+2. Configure the OAuth consent screen for the account audience.
+3. Create an OAuth Client ID of type Web application.
+4. Add the exact hosted site origin under Authorized JavaScript origins. For GitHub Pages this is normally https://andrewholmes2011.github.io (no path).
+5. Enter the client ID in the app and save it.
+6. Connect Google Drive and approve the requested drive scope.
 
-The cloud backend foundation is in cloudflare/:
-- worker.js: Google-token-validated history endpoints and optional Workers AI classification endpoint.
-- schema.sql: D1 history table.
-- wrangler.toml: deployment template.
-- README.md: backend deployment notes.
+The drive scope is needed because organizing requires write permission. Google may require OAuth app verification. A school Google Workspace administrator can block third-party OAuth apps or Drive API access. If blocked, ask the administrator or use an account where API access is authorized. This app does not bypass restrictions.
 
-The Cloudflare backend is a scaffold and must be deployed/configured before cloud history or cloud AI can be used. The browser UI still needs to be connected to these endpoints.
+## GitHub Pages
 
-## Chromebook constraints
+In repository Settings → Pages, choose Deploy from a branch, branch main, folder /(root). Wait for the Pages deployment to finish.
 
-The Chromebook edition is browser-only. It does not depend on Linux, Python, Node.js, or a local executable. It requires:
-- A supported Chrome browser and HTTPS hosting.
-- A Google OAuth client ID.
-- Google Drive API access permitted by the Workspace administrator.
-- OAuth scopes approved by the account owner and administrator.
+## Optional Cloudflare backend
 
-If the school blocks third-party OAuth or Drive API access, DrivePilot AI cannot bypass that restriction. Use an account and files for which you have authorization.
+See cloudflare/README.md. The Worker requires a D1 database, GOOGLE_CLIENT_ID, and ALLOWED_ORIGINS. Set the deployed Worker URL in the app only after deployment.
 
-## Privacy and AI
+## Privacy and limitations
 
-- Local rules and local file parsing should run on-device where possible.
-- Local Windows AI can be an optional Ollama integration; it is not available on a Chromebook without Linux.
-- Cloud AI sends the selected document text to Cloudflare Workers AI. Keep it disabled for school or sensitive documents unless permitted.
-- Never put provider API secrets in browser JavaScript or a public GitHub repository.
-- Do not send files to AI automatically. Require user opt-in and show what content will be transmitted.
-
-## Deployment
-
-### GitHub Pages
-
-1. Open repository Settings -> Pages.
-2. Select Deploy from a branch.
-3. Select main and /(root).
-4. Save and wait for deployment.
-
-### Cloudflare backend
-
-Follow cloudflare/README.md. Replace the placeholder D1 database ID in wrangler.toml, apply schema.sql, deploy the Worker, and configure the exact app origin for CORS before public use.
-
-## Important
-
-The project is under active development. Do not treat the current browser prototype as a completed Google Drive cloud organizer. Back up important files and review every proposed move before approving it.
+- Classification currently uses filenames and MIME types, not document contents. The app does not automatically send document text to AI.
+- The Worker has an optional AI endpoint, but the browser interface does not invoke it.
+- Google OAuth access tokens remain in memory for the current page session; they are not stored in localStorage.
+- The current interface does not yet connect the optional Worker history endpoint.
+- Windows uses the same browser-based Drive API flow; native G:\My Drive filesystem integration and local Ollama companion are not implemented.
+- Back up important files and review the selected destination list before confirming moves.
